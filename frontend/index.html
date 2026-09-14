@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex National Bank — Enterprise Core Banking Portal</title>
+  
+  <!-- Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Classic Corporate Banking Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Toast Notification Stream -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Main Enterprise Application Shell -->
+  <div class="app-container">
+
+    <!-- ===================================================================== -->
+    <!-- ENTERPRISE SIDEBAR NAVIGATION -->
+    <!-- ===================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      
+      <!-- Brand Header -->
+      <div class="sidebar-brand">
+        <div class="brand-logo-icon">
+          <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <div class="brand-info">
+          <div class="brand-name">APEX NATIONAL BANK</div>
+          <div class="brand-sub">Enterprise Core Platform</div>
+        </div>
+      </div>
+
+      <!-- Quick Account Switcher Section -->
+      <div class="sidebar-account-box">
+        <label for="accountSelect" class="sidebar-label">Active Operating Account</label>
+        <div class="account-select-wrapper">
+          <i class="fa-solid fa-user-tie select-icon"></i>
+          <select id="accountSelect" aria-label="Select Bank Account">
+            <option value="" disabled selected>Loading accounts...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Primary Navigation Links -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">CORE BANKING</div>
+        
+        <button class="nav-item active" data-view="dashboard" id="navDashboard">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Dashboard</span>
+        </button>
+        
+        <button class="nav-item" data-view="accounts" id="navAccounts">
+          <i class="fa-solid fa-users"></i>
+          <span>Accounts Roster</span>
+          <span class="nav-pill" id="sidebarAccountsCount">0</span>
+        </button>
+
+        <button class="nav-item" data-view="transactions" id="navTransactions">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Transactions Ledger</span>
+        </button>
+
+        <div class="nav-section-label">RISK & ALGORITHMS</div>
+
+        <button class="nav-item" data-view="fraud" id="navFraud">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Fraud Detection</span>
+          <span class="nav-pill pill-alert hidden" id="sidebarFraudBadge">FLAGGED</span>
+        </button>
+
+        <button class="nav-item" data-view="dsa" id="navDSA">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>DSA Algorithmic Engine</span>
+        </button>
+
+        <div class="nav-section-label">AUDIT & MANAGEMENT</div>
+
+        <button class="nav-item" data-view="emails" id="navEmails">
+          <i class="fa-solid fa-envelope-open-text"></i>
+          <span>Email & Audit Logs</span>
+          <span class="nav-pill" id="sidebarEmailCount">0</span>
+        </button>
+
+        <button class="nav-item" data-view="settings" id="navSettings">
+          <i class="fa-solid fa-sliders"></i>
+          <span>System Settings</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer Status -->
+      <div class="sidebar-footer">
+        <div class="system-status-indicator">
+          <span class="status-dot online"></span>
+          <div class="status-details">
+            <div class="status-title">System Status: OPERATIONAL</div>
+            <div class="status-subtitle" id="sidebarStatusText">DSA Engine & Database Active</div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN CONTENT WRAPPER -->
+    <!-- ===================================================================== -->
+    <div class="main-wrapper">
+      
+      <!-- Top Application Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-toggle-btn" id="btnMobileToggle" aria-label="Toggle Navigation Menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="breadcrumb-container">
+            <span class="breadcrumb-root">Portal</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-active" id="currentBreadcrumb">Executive Dashboard</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Server Live Clock -->
+          <div class="header-clock" id="headerClock">
+            <i class="fa-regular fa-clock"></i>
+            <span id="currentTimestamp">--:--:--</span>
+          </div>
+
+          <!-- Quick Action: Create Account -->
+          <button class="btn btn-secondary btn-sm" id="btnQuickOpenAccount">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>New Account</span>
+          </button>
+
+          <!-- Quick Action: Quick Transfer -->
+          <button class="btn btn-primary btn-sm" id="btnQuickTransfer">
+            <i class="fa-solid fa-money-bill-transfer"></i>
+            <span>Deposit / Withdraw</span>
+          </button>
+
+          <!-- Refresh Data Button -->
+          <button class="btn-icon" id="btnGlobalRefresh" title="Refresh Live Data">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Critical Fraud Alert Banner (Appears across views when account is flagged) -->
+      <section id="fraudAlertBanner" class="fraud-banner hidden" role="alert">
+        <div class="banner-container">
+          <div class="banner-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="banner-content">
+            <div class="banner-title">
+              SECURITY RISK ALERT: Velocity Threshold Exceeded
+              <span class="dsa-tag">Sliding Window (K=3) Violation</span>
+            </div>
+            <div class="banner-description" id="fraudAlertMessage">
+              Suspicious high-velocity financial activity detected on this account. Cumulative volume exceeded the security threshold.
+            </div>
+          </div>
+          <div class="banner-actions">
+            <button class="btn btn-danger-action" id="btnResolveFraudBanner">
+              <i class="fa-solid fa-shield-check"></i>
+              <span>Verify & Clear Hold</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Dynamic Content Region -->
+      <main class="content-body">
+
+        <!-- ================================================================= -->
+        <!-- VIEW 1: EXECUTIVE DASHBOARD -->
+        <!-- ================================================================= -->
+        <section id="view-dashboard" class="view-section active">
+          
+          <!-- Page Title Row -->
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">Executive Banking Dashboard</h1>
+              <p class="page-subtitle">Real-time financial summary, active operating account metrics, and velocity monitoring.</p>
+            </div>
+            <div class="header-actions">
+              <span class="badge badge-outline" id="dashboardActiveAccBadge">Account: #--------</span>
+            </div>
+          </div>
+
+          <!-- Key Metrics KPI Cards Row -->
+          <div class="kpi-grid">
+            
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Active Account Balance</span>
+                <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-currency">₹</span>
+                <span class="kpi-value" id="kpiActiveBalance">0.00</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-status-tag" id="kpiAccountStatus">ACTIVE</span>
+                <span class="kpi-note" id="kpiAccountType">SAVINGS ACCOUNT</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Total Bank Deposits (AUM)</span>
+                <div class="kpi-icon"><i class="fa-solid fa-vault"></i></div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-currency">₹</span>
+                <span class="kpi-value" id="kpiTotalDeposits">0.00</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-subtext" id="kpiTotalAccountsCount">Across 0 registered accounts</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Ledger Transactions</span>
+                <div class="kpi-icon"><i class="fa-solid fa-layer-group"></i></div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="kpiTotalTransactions">0</span>
+                <span class="kpi-unit">records</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-subtext"><i class="fa-solid fa-link"></i> Singly Linked List Ledger</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" id="kpiRiskCard">
+              <div class="kpi-header">
+                <span class="kpi-label">Risk & Velocity Status</span>
+                <div class="kpi-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-value text-success" id="kpiRiskLevel">SAFE</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-subtext" id="kpiRiskSubtext">Sliding Window within safety limit</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Dashboard Two-Column Grid -->
+          <div class="dashboard-split-grid">
+            
+            <!-- Left Column: Active Account Profile & Quick Operations -->
+            <div class="split-col-left">
+              
+              <!-- 1. Active Account Details Card -->
+              <div class="panel-card">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-id-card panel-icon"></i>
+                    <h2>Active Operating Account</h2>
+                  </div>
+                  <button class="btn btn-secondary btn-xs" id="btnCopyDashboardAcc">
+                    <i class="fa-regular fa-copy"></i> Copy No.
+                  </button>
+                </div>
+                <div class="panel-body">
+                  <div class="account-profile-table">
+                    <div class="profile-row">
+                      <span class="profile-label">Account Holder:</span>
+                      <span class="profile-value font-bold" id="dashHolderName">Loading...</span>
+                    </div>
+                    <div class="profile-row">
+                      <span class="profile-label">Account Number:</span>
+                      <span class="profile-value font-mono font-bold text-primary" id="dashAccNumber">--------</span>
+                    </div>
+                    <div class="profile-row">
+                      <span class="profile-label">Account Category:</span>
+                      <span class="profile-value" id="dashAccType">SAVINGS</span>
+                    </div>
+                    <div class="profile-row">
+                      <span class="profile-label">Email Address:</span>
+                      <span class="profile-value" id="dashEmail">user@example.com</span>
+                    </div>
+                    <div class="profile-row">
+                      <span class="profile-label">Contact Phone:</span>
+                      <span class="profile-value" id="dashPhone">+91 98765 43210</span>
+                    </div>
+                    <div class="profile-row">
+                      <span class="profile-label">Opening Date:</span>
+                      <span class="profile-value" id="dashCreatedDate">--</span>
+                    </div>
+                    <div class="profile-row">
+                      <span class="profile-label">Operating Status:</span>
+                      <span class="profile-value">
+                        <span class="status-badge badge-active" id="dashStatusBadge">ACTIVE</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Transfer & Operations Panel -->
+              <div class="panel-card mt-4">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-money-bill-transfer panel-icon"></i>
+                    <h2>Execute Banking Operation</h2>
+                  </div>
+                  <span class="badge badge-neutral font-mono">O(1) Head Prepend</span>
+                </div>
+                <div class="panel-body">
+                  
+                  <!-- Operation Mode Toggle Tabs -->
+                  <div class="operation-tabs">
+                    <button class="op-tab-btn active" id="tabOpDeposit" data-mode="DEPOSIT">
+                      <i class="fa-solid fa-arrow-down-left"></i> Deposit Funds
+                    </button>
+                    <button class="op-tab-btn" id="tabOpWithdraw" data-mode="WITHDRAWAL">
+                      <i class="fa-solid fa-arrow-up-right"></i> Withdraw Funds
+                    </button>
+                  </div>
+
+                  <!-- Form Controls -->
+                  <form id="dashboardTxForm" onsubmit="return false;">
+                    <div class="form-group">
+                      <label for="dashTxAmount" class="form-label">Transaction Amount (₹) *</label>
+                      <div class="input-group">
+                        <span class="input-addon">₹</span>
+                        <input type="number" id="dashTxAmount" class="form-control" placeholder="0.00" min="1" step="0.01" required>
+                      </div>
+                    </div>
+
+                    <!-- Quick Preset Amount Buttons -->
+                    <div class="preset-buttons">
+                      <button type="button" class="btn-preset" data-amount="5000">+₹5,000</button>
+                      <button type="button" class="btn-preset" data-amount="10000">+₹10,000</button>
+                      <button type="button" class="btn-preset" data-amount="25000">+₹25,000</button>
+                      <button type="button" class="btn-preset btn-preset-danger" data-amount="55000" title="Simulates sliding window velocity breach">+₹55,000 (Test Fraud)</button>
+                    </div>
+
+                    <div class="form-group mt-3">
+                      <label for="dashTxDesc" class="form-label">Narrative / Description</label>
+                      <input type="text" id="dashTxDesc" class="form-control" placeholder="e.g. Vendor Payment, Consulting Retainer, Settlement" maxlength="150">
+                    </div>
+
+                    <!-- Live Balance Preview Box -->
+                    <div class="balance-preview-box">
+                      <div class="preview-line">
+                        <span class="preview-text">Current Clear Balance:</span>
+                        <span class="preview-amount font-mono" id="prevCurrentBal">₹0.00</span>
+                      </div>
+                      <div class="preview-line">
+                        <span class="preview-text">Estimated Post-Balance:</span>
+                        <span class="preview-amount font-mono font-bold" id="prevPostBal">₹0.00</span>
+                      </div>
+                    </div>
+
+                    <!-- Execution Action Button -->
+                    <button type="button" id="btnDashExecuteTx" class="btn btn-primary btn-block mt-3">
+                      <i class="fa-solid fa-circle-check"></i>
+                      <span id="btnDashExecuteText">Execute Deposit</span>
+                    </button>
+                  </form>
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Column: Sliding Window Velocity Monitor & Recent Transactions -->
+            <div class="split-col-right">
+              
+              <!-- 1. Real-Time Sliding Window Fraud Monitor Card -->
+              <div class="panel-card">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-radar panel-icon"></i>
+                    <h2>Sliding Window Velocity Monitor</h2>
+                  </div>
+                  <span class="badge badge-outline">DSA: Sliding Window (K=3)</span>
+                </div>
+                <div class="panel-body">
+                  <p class="panel-desc">
+                    Inspects cumulative volume across the active rolling frame of the last <strong>K=3</strong> transactions in real-time.
+                  </p>
+
+                  <div class="velocity-metrics-grid">
+                    <div class="vmetric-box">
+                      <span class="vmetric-label">Active Window Operations</span>
+                      <div class="window-slots" id="dashWindowSlots">
+                        <span class="slot-badge empty">Slot 1</span>
+                        <span class="slot-badge empty">Slot 2</span>
+                        <span class="slot-badge empty">Slot 3</span>
+                      </div>
+                    </div>
+
+                    <div class="vmetric-box">
+                      <span class="vmetric-label">Rolling Cumulative Volume</span>
+                      <div class="vmetric-value font-mono" id="dashWindowSum">₹0.00</div>
+                    </div>
+                  </div>
+
+                  <!-- Threshold Progress Bar -->
+                  <div class="threshold-bar-wrapper">
+                    <div class="threshold-labels">
+                      <span id="dashThresholdPctLabel">0.0% of security limit</span>
+                      <span class="font-mono" id="dashThresholdLimitLabel">Limit: ₹50,000.00</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill" id="dashThresholdFill" style="width: 0%;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Active Window Breakdown -->
+                  <div class="window-recent-table" id="dashWindowRecentTable">
+                    <div class="empty-state-sm">No operations in active evaluation window.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Recent Transactions Table Card -->
+              <div class="panel-card mt-4">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-clock-rotate-left panel-icon"></i>
+                    <h2>Recent Ledger Transactions</h2>
+                  </div>
+                  <button class="btn btn-link btn-xs" id="btnViewAllTransactions">
+                    View Full Ledger <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                </div>
+                <div class="panel-body p-0">
+                  <div class="table-responsive">
+                    <table class="enterprise-table" id="dashRecentTxTable">
+                      <thead>
+                        <tr>
+                          <th>TX ID</th>
+                          <th>Date & Time</th>
+                          <th>Narrative</th>
+                          <th>Type</th>
+                          <th class="text-right">Amount (₹)</th>
+                          <th class="text-right">Balance After</th>
+                          <th class="text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dashRecentTxBody">
+                        <tr>
+                          <td colspan="7" class="table-loading">Loading transaction ledger...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 2: ACCOUNTS ROSTER -->
+        <!-- ================================================================= -->
+        <section id="view-accounts" class="view-section hidden">
+          
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">Bank Accounts Roster</h1>
+              <p class="page-subtitle">Complete registry of indexed customer bank accounts sorted via BST In-Order Traversal.</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-primary" id="btnOpenAccountModalFromRoster">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Open New Account</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="filter-bar">
+            <div class="search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="accountsSearchInput" class="search-control" placeholder="Search accounts by number, holder name, or email...">
+            </div>
+            
+            <div class="filter-dropdown-wrapper">
+              <label for="accountsTypeFilter" class="filter-label">Filter Type:</label>
+              <select id="accountsTypeFilter" class="filter-select">
+                <option value="ALL">All Categories</option>
+                <option value="SAVINGS">Savings</option>
+                <option value="CURRENT">Current</option>
+                <option value="SALARY">Salary</option>
+                <option value="PREMIUM_WEALTH">Premium Wealth</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Enterprise Accounts Table -->
+          <div class="panel-card mt-3">
+            <div class="table-responsive">
+              <table class="enterprise-table" id="accountsRosterTable">
+                <thead>
+                  <tr>
+                    <th>Account Number</th>
+                    <th>Account Holder</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Category</th>
+                    <th class="text-right">Available Balance</th>
+                    <th class="text-center">Risk Status</th>
+                    <th>Opened On</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="accountsRosterBody">
+                  <tr>
+                    <td colspan="9" class="table-loading">Loading accounts registry...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 3: TRANSACTIONS LEDGER -->
+        <!-- ================================================================= -->
+        <section id="view-transactions" class="view-section hidden">
+          
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">Chronological Transaction Ledger</h1>
+              <p class="page-subtitle">Singly Linked List ledger preserving full audit trail with O(1) head insertion.</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-secondary" id="btnRefreshTxLedger">
+                <i class="fa-solid fa-rotate-right"></i> Refresh Ledger
+              </button>
+            </div>
+          </div>
+
+          <!-- Ledger Pointer Banner -->
+          <div class="ledger-pointer-banner">
+            <div class="pointer-badge"><i class="fa-solid fa-code-branch"></i> DSA Ledger Head Pointer</div>
+            <div class="pointer-text font-mono" id="txLedgerHeadSnippet">HEAD -> [Empty Ledger]</div>
+          </div>
+
+          <!-- Filter Toolbar -->
+          <div class="filter-bar mt-3">
+            <div class="filter-tabs" id="txFilterTabs">
+              <button class="filter-tab-btn active" data-filter="ALL">All Operations</button>
+              <button class="filter-tab-btn" data-filter="DEPOSIT">Credits / Deposits</button>
+              <button class="filter-tab-btn" data-filter="WITHDRAWAL">Debits / Withdrawals</button>
+              <button class="filter-tab-btn" data-filter="FLAGGED">Security Flagged</button>
+            </div>
+
+            <div class="search-input-wrapper" style="max-width: 320px;">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="txSearchInput" class="search-control" placeholder="Search by TX ID or narrative...">
+            </div>
+          </div>
+
+          <!-- Full Transactions Table -->
+          <div class="panel-card mt-3">
+            <div class="table-responsive">
+              <table class="enterprise-table" id="fullTxTable">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Timestamp</th>
+                    <th>Narrative</th>
+                    <th>Category</th>
+                    <th class="text-right">Amount (₹)</th>
+                    <th class="text-right">Balance After (₹)</th>
+                    <th class="text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="fullTxTableBody">
+                  <tr>
+                    <td colspan="7" class="table-loading">Traversing Singly Linked List...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 4: FRAUD DETECTION CENTER -->
+        <!-- ================================================================= -->
+        <section id="view-fraud" class="view-section hidden">
+          
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">Fraud Detection & Velocity Risk Center</h1>
+              <p class="page-subtitle">Algorithmic Sliding Window engine monitoring high-velocity transactions in real time.</p>
+            </div>
+          </div>
+
+          <!-- Fraud Center Top KPI Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Active Account Risk Level</span>
+                <i class="fa-solid fa-shield-virus"></i>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="fraudRiskLevelVal">SAFE</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-subtext" id="fraudRiskStatusReason">Operating within standard limits</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Current Window Volume</span>
+                <i class="fa-solid fa-chart-simple"></i>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-currency">₹</span>
+                <span class="kpi-value" id="fraudWindowSumVal">0.00</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-subtext" id="fraudWindowOpsCount">0 operations in frame</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Security Threshold Limit</span>
+                <i class="fa-solid fa-gauge"></i>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-currency">₹</span>
+                <span class="kpi-value" id="fraudThresholdLimitVal">50,000.00</span>
+              </div>
+              <div class="kpi-footer">
+                <span class="kpi-subtext">Window Size: K=3 operations</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-label">Account Security Hold</span>
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="fraudHoldStatusVal">CLEARED</span>
+              </div>
+              <div class="kpi-footer">
+                <button class="btn btn-xs btn-secondary" id="btnResolveFraudCenter">Clear Hold</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Algorithmic Explanation & Active Slot Breakdown -->
+          <div class="dashboard-split-grid mt-4">
+            
+            <div class="split-col-left">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-diagram-next panel-icon"></i>
+                    <h2>Sliding Window Evaluation Queue</h2>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="queue-visualization" id="fraudQueueVisual">
+                    <!-- Dynamic slots rendered in JS -->
+                  </div>
+
+                  <div class="threshold-bar-wrapper mt-4">
+                    <div class="threshold-labels">
+                      <span id="fraudCenterPct">0% of safety limit</span>
+                      <span class="font-mono" id="fraudCenterMax">Max ₹50,000.00</span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill" id="fraudCenterBar" style="width: 0%;"></div>
+                    </div>
+                  </div>
+
+                  <div class="callout-box mt-4">
+                    <strong>Algorithmic Invariant:</strong> At any point, if $\sum_{i=1}^{K} \text{Amount}_i \ge \text{Threshold}$, the account is immediately flagged as `CRITICAL_FRAUD`, an alert is logged to the in-memory security stream, and a high-priority email notification is dispatched.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="split-col-right">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-bell panel-icon"></i>
+                    <h2>Security Alert History Log</h2>
+                  </div>
+                </div>
+                <div class="panel-body p-0">
+                  <div class="table-responsive">
+                    <table class="enterprise-table" id="fraudAlertsTable">
+                      <thead>
+                        <tr>
+                          <th>Timestamp</th>
+                          <th>Trigger Reason</th>
+                          <th class="text-right">Window Sum</th>
+                          <th class="text-center">Severity</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fraudAlertsBody">
+                        <tr>
+                          <td colspan="4" class="empty-state-sm">No security alerts recorded for this account.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 5: CORE DSA ENGINES & VISUALIZERS -->
+        <!-- ================================================================= -->
+        <section id="view-dsa" class="view-section hidden">
+          
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">Core DSA Algorithmic Engine Visualizers</h1>
+              <p class="page-subtitle">Interactive algorithmic demonstrators for Singly Linked List, BST, Sliding Window, and Hash Map.</p>
+            </div>
+          </div>
+
+          <!-- DSA Module Selection Tabs -->
+          <div class="dsa-module-tabs">
+            <button class="dsa-tab active" data-dsa="linked-list" id="tabDSALinkedList">
+              <i class="fa-solid fa-link"></i> 1. Singly Linked List (Ledger)
+            </button>
+            <button class="dsa-tab" data-dsa="bst" id="tabDSABST">
+              <i class="fa-solid fa-tree"></i> 2. Binary Search Tree (BST Index)
+            </button>
+            <button class="dsa-tab" data-dsa="sliding-window" id="tabDSASlidingWindow">
+              <i class="fa-solid fa-arrows-left-right-to-line"></i> 3. Sliding Window (Fraud)
+            </button>
+            <button class="dsa-tab" data-dsa="hash-map" id="tabDSAHashMap">
+              <i class="fa-solid fa-table-cells"></i> 4. Hash Map (O(1) Lookup)
+            </button>
+          </div>
+
+          <!-- DSA SUB-MODULE 1: SINGLY LINKED LIST -->
+          <div id="dsa-pane-linked-list" class="dsa-pane active">
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <i class="fa-solid fa-link panel-icon"></i>
+                  <h2>Singly Linked List — Financial Transaction Ledger</h2>
+                </div>
+                <span class="badge badge-outline">Complexity: O(1) Prepend</span>
+              </div>
+              <div class="panel-body">
+                <p class="panel-desc">
+                  Every financial transaction is encapsulated in a <code>TransactionNode</code> with a pointer (<code>next</code>) pointing to the prior transaction. Inserting at the <code>head</code> executes in constant $O(1)$ time without array-shifting penalties.
+                </p>
+
+                <!-- Linked List Visual Node Chain -->
+                <div class="ll-visual-canvas" id="dsaLLCanvas">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DSA SUB-MODULE 2: BINARY SEARCH TREE -->
+          <div id="dsa-pane-bst" class="dsa-pane hidden">
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <i class="fa-solid fa-tree panel-icon"></i>
+                  <h2>Binary Search Tree (BST) — Account Hierarchy & Search</h2>
+                </div>
+                <span class="badge badge-outline">Complexity: O(log N) Search / O(N) In-Order</span>
+              </div>
+              <div class="panel-body">
+                <p class="panel-desc">
+                  Maintains an ordered binary tree sorted by <code>account_number</code>. Enables logarithmic search and guaranteed sorted reporting via In-Order traversal (Left &rarr; Root &rarr; Right).
+                </p>
+
+                <!-- BST Search Bar -->
+                <div class="bst-search-toolbar">
+                  <div class="search-input-wrapper" style="max-width: 380px;">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="dsaBSTSearchInput" class="search-control" placeholder="Search account number in BST (e.g. 10001002)...">
+                  </div>
+                  <button class="btn btn-primary" id="btnDSASearchBST">Execute O(log N) Search</button>
+                </div>
+
+                <div id="dsaBSTSearchFeedback" class="search-feedback-box hidden"></div>
+
+                <!-- Interactive Nested Tree Visualization -->
+                <div class="bst-tree-canvas" id="dsaBSTCanvas">
+                  <div class="tree-hierarchy" id="dsaTreeHierarchy">
+                    <!-- Dynamic Tree Nodes -->
+                  </div>
+                </div>
+
+                <!-- In-Order Traversal Sorted Chips -->
+                <div class="inorder-box mt-4">
+                  <div class="inorder-header">
+                    <i class="fa-solid fa-arrow-down-short-wide"></i>
+                    <span>BST In-Order Traversal (Sorted by Account Number):</span>
+                  </div>
+                  <div class="inorder-chips-list" id="dsaBSTInorderList">
+                    <!-- Sorted chips -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DSA SUB-MODULE 3: SLIDING WINDOW -->
+          <div id="dsa-pane-sliding-window" class="dsa-pane hidden">
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <i class="fa-solid fa-arrows-left-right-to-line panel-icon"></i>
+                  <h2>Sliding Window Algorithmic Engine</h2>
+                </div>
+                <span class="badge badge-outline">Complexity: O(1) Amortized Maintenance</span>
+              </div>
+              <div class="panel-body">
+                <p class="panel-desc">
+                  The Sliding Window maintains a double-ended queue of length $K$. When a $(K+1)$-th transaction enters, the oldest transaction is evicted in $O(1)$ time, and the rolling sum is updated.
+                </p>
+
+                <div class="sliding-window-diagram" id="dsaSlidingWindowDiagram">
+                  <!-- Visual breakdown -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DSA SUB-MODULE 4: HASH MAP -->
+          <div id="dsa-pane-hash-map" class="dsa-pane hidden">
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <i class="fa-solid fa-table-cells panel-icon"></i>
+                  <h2>Hash Map Indexing — Instant O(1) Account Retrieval</h2>
+                </div>
+                <span class="badge badge-outline">Complexity: O(1) Primary Key Lookup</span>
+              </div>
+              <div class="panel-body">
+                <p class="panel-desc">
+                  Primary indexing structure storing key-value pairs <code>{ account_number: BankAccount }</code> for instantaneous lookup during financial transactions.
+                </p>
+
+                <div class="table-responsive">
+                  <table class="enterprise-table" id="dsaHashMapTable">
+                    <thead>
+                      <tr>
+                        <th>Hash Key (Account No)</th>
+                        <th>Bucket Hash Value</th>
+                        <th>Account Holder</th>
+                        <th>Current Balance (₹)</th>
+                        <th>Status</th>
+                        <th class="text-center">Lookup Time</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dsaHashMapBody">
+                      <!-- Dynamic records -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 6: EMAIL & AUDIT LOGS -->
+        <!-- ================================================================= -->
+        <section id="view-emails" class="view-section hidden">
+          
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">Outbound Email Notification Stream</h1>
+              <p class="page-subtitle">Live audit stream of all dispatched onboarding emails, transaction statements, and security alerts.</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-secondary" id="btnRefreshEmailsView">
+                <i class="fa-solid fa-rotate-right"></i> Refresh Stream
+              </button>
+            </div>
+          </div>
+
+          <!-- Delivery Mode Badge & Stats -->
+          <div class="email-summary-banner">
+            <div class="email-mode-box">
+              <span class="status-dot online"></span>
+              <span id="emailDeliveryModeText">Delivery Engine: REAL SMTP / MOCK CONSOLE AUDIT</span>
+            </div>
+            <div class="email-count-pill" id="emailTotalLoggedBadge">Total Dispatched: 0</div>
+          </div>
+
+          <!-- Emails Table -->
+          <div class="panel-card mt-3">
+            <div class="table-responsive">
+              <table class="enterprise-table" id="emailLogsTable">
+                <thead>
+                  <tr>
+                    <th>Email ID</th>
+                    <th>Dispatched At</th>
+                    <th>Recipient</th>
+                    <th>Type</th>
+                    <th>Subject</th>
+                    <th>Mode</th>
+                    <th class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="emailLogsBody">
+                  <tr>
+                    <td colspan="7" class="table-loading">Loading email audit logs...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 7: SYSTEM SETTINGS -->
+        <!-- ================================================================= -->
+        <section id="view-settings" class="view-section hidden">
+          
+          <div class="section-header">
+            <div>
+              <h1 class="page-title">System & Algorithmic Settings</h1>
+              <p class="page-subtitle">Configure Sliding Window parameters, velocity thresholds, and check SMTP server diagnostics.</p>
+            </div>
+          </div>
+
+          <div class="dashboard-split-grid">
+            
+            <div class="split-col-left">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-sliders panel-icon"></i>
+                    <h2>Fraud Engine Parameters</h2>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <form id="settingsFraudForm" onsubmit="return false;">
+                    <div class="form-group">
+                      <label for="setWindowK" class="form-label">Sliding Window Size (K Operations) *</label>
+                      <input type="number" id="setWindowK" class="form-control" min="1" max="20" value="3" required>
+                      <span class="form-hint">Number of recent consecutive operations evaluated for velocity spikes.</span>
+                    </div>
+
+                    <div class="form-group mt-3">
+                      <label for="setFraudThreshold" class="form-label">Velocity Volume Threshold (₹) *</label>
+                      <div class="input-group">
+                        <span class="input-addon">₹</span>
+                        <input type="number" id="setFraudThreshold" class="form-control" min="1000" step="1000" value="50000" required>
+                      </div>
+                      <span class="form-hint">Cumulative sum in the active window frame triggering immediate security hold.</span>
+                    </div>
+
+                    <button type="button" class="btn btn-primary mt-4" id="btnSaveFraudSettings">
+                      <i class="fa-solid fa-floppy-disk"></i> Apply Parameters Across Accounts
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="split-col-right">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <i class="fa-solid fa-server panel-icon"></i>
+                    <h2>SMTP Notification Diagnostics</h2>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div class="diagnostics-list">
+                    <div class="diag-row">
+                      <span class="diag-label">SMTP Delivery Mode:</span>
+                      <span class="diag-val font-mono" id="diagSmtpMode">MOCK CONSOLE & IN-MEMORY</span>
+                    </div>
+                    <div class="diag-row">
+                      <span class="diag-label">Default Host:</span>
+                      <span class="diag-val font-mono">smtp.gmail.com:587</span>
+                    </div>
+                    <div class="diag-row">
+                      <span class="diag-label">Dispatcher Status:</span>
+                      <span class="diag-val text-success">Active & Non-Blocking</span>
+                    </div>
+                    <div class="diag-row">
+                      <span class="diag-label">Fallback Safety:</span>
+                      <span class="diag-val text-success">Enabled (Zero crash on bad SMTP config)</span>
+                    </div>
+                  </div>
+
+                  <div class="callout-box mt-4">
+                    <strong>Note:</strong> If real SMTP credentials are not configured in <code>.env</code>, the system operates seamlessly in <strong>Mock Console Mode</strong>, logging all outgoing notifications to the in-memory audit stream and console.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- ENTERPRISE MODALS -->
+  <!-- ======================================================================= -->
+
+  <!-- 1. Open New Bank Account Modal -->
+  <div id="createAccountModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalCreateAccTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-user-plus modal-icon"></i>
+          <h3 id="modalCreateAccTitle">Establish New Bank Account</h3>
+        </div>
+        <button class="modal-close" id="btnCloseCreateAccountModal" aria-label="Close modal">&times;</button>
+      </div>
+      
+      <form id="createAccountModalForm" class="modal-body" onsubmit="return false;">
+        <div class="form-group">
+          <label for="inputNewName" class="form-label">Account Holder Full Name *</label>
+          <input type="text" id="inputNewName" class="form-control" placeholder="e.g. Vikram Sharma" required>
+        </div>
+
+        <div class="form-group mt-3">
+          <label for="inputNewEmail" class="form-label">Email Address (For Notifications) *</label>
+          <input type="email" id="inputNewEmail" class="form-control" placeholder="e.g. vikram.sharma@example.com" required>
+        </div>
+
+        <div class="form-row mt-3">
+          <div class="form-group flex-1">
+            <label for="inputNewAccNum" class="form-label">Custom Account Number</label>
+            <input type="text" id="inputNewAccNum" class="form-control" placeholder="Auto-generated if blank">
+          </div>
+          
+          <div class="form-group flex-1">
+            <label for="inputNewAccType" class="form-label">Account Category *</label>
+            <select id="inputNewAccType" class="form-control">
+              <option value="SAVINGS">Savings Account</option>
+              <option value="CURRENT">Current Account</option>
+              <option value="SALARY">Salary Account</option>
+              <option value="PREMIUM_WEALTH">Premium Wealth</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row mt-3">
+          <div class="form-group flex-1">
+            <label for="inputNewInitialDeposit" class="form-label">Opening Initial Deposit (₹)</label>
+            <div class="input-group">
+              <span class="input-addon">₹</span>
+              <input type="number" id="inputNewInitialDeposit" class="form-control" placeholder="0.00" min="0" step="0.01" value="10000">
+            </div>
+          </div>
+
+          <div class="form-group flex-1">
+            <label for="inputNewPhone" class="form-label">Contact Phone</label>
+            <input type="text" id="inputNewPhone" class="form-control" value="+91 98765 43210">
+          </div>
+        </div>
+
+        <div class="callout-box mt-3">
+          <i class="fa-solid fa-circle-info"></i>
+          Upon creation, this account will be indexed into Hash Map $O(1)$ and BST $O(\log N)$, and an onboarding statement will be dispatched.
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelCreateAccountModal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btnSubmitCreateAccount">
+            <i class="fa-solid fa-check"></i> Establish Account
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Email Statement Preview Modal -->
+  <div id="emailPreviewModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalEmailSubject">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-envelope-open-text modal-icon"></i>
+          <h3 id="modalEmailSubject">Official Statement Inspection</h3>
+        </div>
+        <button class="modal-close" id="btnCloseEmailPreviewModal" aria-label="Close modal">&times;</button>
+      </div>
+      
+      <div class="modal-body p-0">
+        <div class="email-meta-header" id="emailPreviewMeta">
+          <!-- Rendered metadata -->
+        </div>
+        <div class="email-html-body" id="emailPreviewHtmlContainer">
+          <!-- Rendered HTML -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCloseEmailPreviewBtn">Close Statement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Fraud Resolution Modal -->
+  <div id="fraudResolutionModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-shield-halved modal-icon text-danger"></i>
+          <h3>Verify & Resolve Security Flag</h3>
+        </div>
+        <button class="modal-close" id="btnCloseFraudModal" aria-label="Close modal">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>
+          You are authorizing the security clearance of the velocity hold on account <strong id="fraudResolveAccNum">#--------</strong>.
+        </p>
+        <div class="callout-box mt-3">
+          Confirm that the recent high-volume transactions were verified and authorized by the account holder.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCancelFraudModal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmFraudResolution">
+          <i class="fa-solid fa-check"></i> Confirm Clearance & Restore Active Status
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enterprise Application Controller JavaScript -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
